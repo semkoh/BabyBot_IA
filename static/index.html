@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabyBot - Assistant Parental Intelligent</title>
+    <style>
+        :root {
+            --bg: #fffafc;
+            --bg-deep: #fff5ef;
+            --bg-light: #fffdf9;
+            --bg-card: rgba(255, 253, 249, 0.96);
+            --purple: #b7a2d6;
+            --blue: #9db6c9;
+            --green: #31d0aa;
+            --red: #ff6b81;
+            --yellow: #efe2cf;
+            --orange: #f3cfdc;
+            --cyan: #eadcf6;
+            --white: #3d3146;
+            --gray: #7d7185;
+            --gray-dark: #aa9eaf;
+            --line: rgba(183, 162, 214, 0.2);
+            --glow: 0 24px 60px rgba(196, 177, 209, 0.16);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(243, 207, 220, 0.22), transparent 26%),
+                radial-gradient(circle at 85% 12%, rgba(239, 226, 207, 0.28), transparent 18%),
+                radial-gradient(circle at 20% 100%, rgba(234, 220, 246, 0.24), transparent 26%),
+                linear-gradient(180deg, #fffdfb 0%, var(--bg) 48%, var(--bg-deep) 100%);
+            color: var(--white);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: auto;
+            width: 280px;
+            height: 280px;
+            border-radius: 999px;
+            filter: blur(18px);
+            opacity: 0.22;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            top: 72px;
+            right: 8%;
+            background: linear-gradient(135deg, #f3cfdc, #efe2cf);
+            opacity: 0.14;
+        }
+
+        body::after {
+            left: 6%;
+            bottom: 6%;
+            background: linear-gradient(135deg, #eadcf6, #fffafc);
+            opacity: 0.14;
+        }
+
+        .screen { display: none; height: 100vh; }
+        .screen.active { display: flex; position: relative; z-index: 1; }
+
+        .welcome-screen {
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: transparent;
+            overflow-y: auto;
+        }
+
+        .welcome-card {
+            width: min(1100px, 100%);
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+            gap: 22px;
+            align-items: start;
+        }
+        .welcome-card.login-mode {
+            width: min(560px, 100%);
+            grid-template-columns: 1fr;
+        }
+        .welcome-card.login-mode .welcome-side {
+            display: none;
+        }
+        .welcome-card.login-mode .login-card {
+            width: 100%;
+        }
+
+        .login-card {
+            background:
+                linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(255, 248, 252, 1));
+            border: 1px solid var(--line);
+            border-radius: 34px;
+            padding: 32px;
+            box-shadow: var(--glow);
+            backdrop-filter: blur(20px);
+        }
+
+        .login-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .login-mark {
+            width: 76px;
+            height: 76px;
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 26%),
+                linear-gradient(135deg, #b7a2d6, #f3cfdc 70%, #efe2cf);
+            box-shadow: 0 16px 28px rgba(183, 162, 214, 0.2);
+            animation: floaty 4.8s ease-in-out infinite;
+        }
+
+        .login-card h2 {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 28px;
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+        }
+        .login-card .subtitle { color: var(--gray); margin-bottom: 18px; font-size: 16px; line-height: 1.6; }
+        .privacy-box {
+            margin-bottom: 18px;
+            padding: 18px 20px;
+            border-radius: 22px;
+            background: #fff7f2;
+            border: 1px solid rgba(183, 162, 214, 0.14);
+            color: #5f4f65;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        form { display: grid; gap: 14px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .field { display: grid; gap: 8px; }
+        .field label {
+            font-weight: 800;
+            font-size: 13px;
+            color: #7f6686;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+        .field input, .field select {
+            width: 100%;
+            padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(183, 162, 214, 0.24);
+            background: rgba(255, 253, 249, 0.98);
+            color: #3d3146;
+            font-size: 15px;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        .field input:focus, .field select:focus {
+            border-color: rgba(183, 162, 214, 0.52);
+            box-shadow: 0 0 0 4px rgba(183, 162, 214, 0.12);
+        }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 18px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary {
+            background: linear-gradient(135deg, #8f7ae6, #6f8ef6);
+            color: #ffffff;
+            box-shadow: 0 14px 28px rgba(111, 142, 246, 0.24);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #ffd8a8, #ffbe98);
+            color: #5f3b2f;
+            border: 1px solid rgba(255, 190, 152, 0.42);
+        }
+        .btn-danger { background: rgba(255,107,129,0.12); color: #b43f55; }
+        .helper { color: var(--gray); font-size: 13px; line-height: 1.7; }
+        .hidden { display: none !important; }
+        .welcome-side {
+            display: grid;
+            gap: 18px;
+        }
+        .welcome-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+        .profiles-card {
+            background: linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(255, 248, 252, 1));
+            border: 1px solid var(--line);
+            border-radius: 34px;
+            padding: 24px;
+            box-shadow: var(--glow);
+            backdrop-filter: blur(18px);
+        }
+        .profiles-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .section-kicker {
+            color: #a38bbf;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .profiles-head h3 {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+        .profiles-head p {
+            color: var(--gray);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .active-chip {
+            min-width: 170px;
+            padding: 14px 16px;
+            border-radius: 22px;
+            background: #f8f1fb;
+            border: 1px solid rgba(183, 162, 214, 0.14);
+        }
+        .active-chip strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .active-chip span {
+            display: block;
+            color: #8b79a1;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .profiles-list {
+            display: grid;
+            gap: 12px;
+        }
+        .profile-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(183, 162, 214, 0.14);
+            background: rgba(255, 253, 249, 0.86);
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+        .profile-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(183, 162, 214, 0.28);
+            background: rgba(255, 248, 252, 0.98);
+        }
+        .profile-item.active-profile {
+            border-color: rgba(183, 162, 214, 0.36);
+            box-shadow: inset 0 0 0 1px rgba(243, 207, 220, 0.3);
+        }
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(239, 226, 207, 0.7), rgba(243, 207, 220, 0.62), rgba(234, 220, 246, 0.7));
+            color: #6b5674;
+        }
+        .profile-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .profile-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--white);
+        }
+        .profile-meta {
+            color: var(--gray);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            margin-top: 8px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.12);
+            color: #6ee7b7;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .profile-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .profile-btn {
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(90, 139, 109, 0.16);
+            background: linear-gradient(135deg, #f4fbf6, #e8f6ec);
+            color: #335442;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .profile-btn.primary {
+            border: none;
+            background: linear-gradient(135deg, #7c6cf2, #5c8df6);
+            color: #ffffff;
+        }
+        .profile-btn.danger {
+            background: linear-gradient(135deg, #ff9a9e, #ff7b89);
+            color: #ffffff;
+            border-color: rgba(255, 123, 137, 0.34);
+        }
+        .profiles-empty {
+            padding: 18px;
+            border-radius: 20px;
+            border: 1px dashed rgba(148, 163, 184, 0.18);
+            background: #fffaf6;
+            color: var(--gray);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .profiles-hidden-note {
+            padding: 18px;
+            border-radius: 20px;
+            background: #fffaf6;
+            border: 1px solid rgba(183, 162, 214, 0.14);
+            color: #8b79a1;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .app-screen { flex-direction: column; }
+        .header {
+            background: rgba(234, 220, 230, 0.99);
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-shrink: 0;
+            box-shadow: 0 10px 28px rgba(124, 99, 146, 0.22);
+            border-bottom: 1px solid rgba(140, 116, 164, 0.28);
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-left .icon { font-size: 28px; }
+        .header-left h1 { font-size: 18px; font-weight: 700; }
+        .header-left small { color: #8c7f8f; font-size: 11px; display: block; }
+        .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+        .active-child {
+            padding: 10px 14px;
+            border-radius: 18px;
+            background: rgba(248, 236, 244, 0.92);
+            min-width: 190px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(140, 116, 164, 0.24);
+        }
+        .active-child strong { display: block; font-size: 13px; }
+        .active-child small { display: block; color: #8c7f8f; font-size: 11px; margin-top: 3px; }
+        .tabs { display: flex; gap: 4px; }
+        .tab-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: #695270;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #e5d1e6;
+            color: #533d5d;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+        }
+        .logout-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #f4dce6;
+            color: #614b6b;
+            border: 1px solid rgba(140, 116, 164, 0.24);
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .messages::-webkit-scrollbar { width: 6px; }
+        .messages::-webkit-scrollbar-track { background: var(--bg-light); }
+        .messages::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .message { display: flex; animation: fadeIn 0.3s ease; max-width: 85%; }
+        .message.user { align-self: flex-end; }
+        .message.assistant { align-self: flex-start; flex-direction: column; }
+        .msg-label { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .msg-label span:last-child { color: var(--purple); font-size: 11px; font-weight: 600; }
+        .msg-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .message.user .msg-bubble { background: #f3cfdc; color: #5d4b54; border-bottom-right-radius: 4px; }
+        .message.assistant .msg-bubble { background: rgba(255, 253, 249, 0.98); border: 1px solid rgba(183, 162, 214, 0.12); border-bottom-left-radius: 4px; }
+        .feedback-btns { display: flex; gap: 6px; margin-top: 6px; }
+        .feedback-btn {
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            background: var(--bg-light);
+            color: var(--gray-dark);
+            transition: 0.2s;
+        }
+        .feedback-btn.active-up { background: rgba(16,185,129,0.2); color: var(--green); }
+        .feedback-btn.active-down { background: rgba(239,68,68,0.2); color: var(--red); }
+        .feedback-msg { color: #475569; font-size: 10px; align-self: center; margin-left: 4px; }
+        .typing { display: flex; gap: 6px; padding: 12px 16px; align-items: center; }
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--purple);
+            animation: pulse 1.2s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .quick-questions { padding: 0 16px 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .quick-btn {
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(176, 202, 255, 0.14);
+            background: rgba(255,253,249,0.98);
+            color: #7f6686;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .quick-btn:hover { border-color: rgba(183, 162, 214, 0.4); color: #5d4b54; background: rgba(255,253,249,1); }
+        .input-bar {
+            padding: 12px;
+            background: rgba(255, 251, 247, 0.98);
+            border-top: 1px solid var(--line);
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .input-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(183, 162, 214, 0.16);
+            background: rgba(255, 253, 249, 0.98);
+            color: #3d3146;
+            font-size: 14px;
+            outline: none;
+        }
+        .input-bar input:focus { border-color: rgba(183, 162, 214, 0.54); }
+        .input-bar button {
+            padding: 12px 20px;
+            border-radius: 18px;
+            border: none;
+            background: #b7a2d6;
+            color: #fffdf9;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .analyze-panel, .stats-panel { flex: 1; padding: 20px; overflow-y: auto; }
+        .analyze-card, .stat-card, .pipeline-card {
+            background: rgba(255, 253, 249, 0.98);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--line);
+            box-shadow: var(--glow);
+        }
+        .analyze-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .analyze-btn {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 18px;
+            border: none;
+            background: #b7a2d6;
+            color: #fffdf9;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .analyze-btn:disabled { background: #334155; cursor: default; }
+        .analyze-status { color: var(--gray); font-size: 12px; margin-top: 12px; min-height: 18px; }
+        .result-card {
+            margin-top: 16px;
+            background: rgba(255, 250, 245, 0.98);
+            border-radius: 18px;
+            padding: 16px;
+            display: none;
+        }
+        .result-card.show { display: block; }
+        .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .result-icon { font-size: 28px; }
+        .result-type { font-weight: 700; font-size: 18px; }
+        .result-conf { color: var(--gray-dark); font-size: 12px; }
+        .progress-bar { height: 6px; border-radius: 3px; background: #334155; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 3px; transition: width 1s; }
+        .result-advice { color: #cbd5e1; font-size: 13px; margin-top: 10px; line-height: 1.5; white-space: pre-wrap; }
+        .steps-list { display: grid; gap: 10px; }
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 250, 245, 0.98);
+            border-radius: 16px;
+        }
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .step-title { color: var(--white); font-weight: 600; font-size: 13px; }
+        .step-desc { color: var(--gray-dark); font-size: 11px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .stat-card { text-align: center; }
+        .stat-icon { font-size: 28px; }
+        .stat-value { font-size: 32px; font-weight: 700; margin: 8px 0; }
+        .stat-label { color: var(--gray); font-size: 13px; }
+        .pipeline-bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 12px; }
+        .pipeline-fill { height: 100%; background: linear-gradient(90deg, #ff9f68, #ffd166, #31d0aa); border-radius: 4px; transition: width 0.5s; }
+        .toast {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.98);
+            color: white;
+            font-size: 13px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: 0.2s;
+            pointer-events: none;
+            z-index: 20;
+            border: 1px solid rgba(123, 144, 188, 0.14);
+            box-shadow: var(--glow);
+        }
+        .toast { color: #5d4b54; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes floaty {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        @media (max-width: 980px) {
+            .welcome-card { grid-template-columns: 1fr; }
+            .stats-grid, .analyze-actions, .form-grid { grid-template-columns: 1fr; }
+            .header { align-items: flex-start; flex-direction: column; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .message { max-width: 100%; }
+            .profiles-head, .profile-item { flex-direction: column; align-items: stretch; }
+            .profile-actions { justify-content: stretch; }
+            .profile-btn { width: 100%; }
+            .welcome-actions { justify-content: stretch; }
+            .welcome-actions .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-screen" class="screen welcome-screen active">
+        <div class="welcome-card">
+            <div class="login-card">
+                <div class="welcome-actions">
+                    <button id="return-to-app-btn" class="btn btn-secondary" type="button" onclick="returnToApp()" style="display:none;">Retour a l'app</button>
+                </div>
+                <div class="login-head">
+                    <div class="login-mark">👶</div>
+                    <div>
+                        <h2 id="welcome-title">Connexion enfant</h2>
+                        <div class="subtitle" id="welcome-subtitle">Entrez juste les informations de l'enfant pour continuer.</div>
+                    </div>
+                </div>
+                <div class="privacy-box" id="welcome-privacy">Les autres comptes ne sont pas affiches. Entrez vos informations pour ouvrir uniquement votre compte.</div>
+                <form id="profile-form">
+                    <div class="form-grid">
+                        <div class="field"><label for="first-name">Prenom</label><input id="first-name" name="firstName" type="text" required></div>
+                        <div class="field"><label for="last-name">Nom</label><input id="last-name" name="lastName" type="text" required></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field"><label for="age-value">Age</label><input id="age-value" name="ageValue" type="number" min="0" max="216" required></div>
+                        <div class="field"><label for="age-unit">Unite</label><select id="age-unit" name="ageUnit"><option value="mois">mois</option><option value="ans">ans</option></select></div>
+                    </div>
+                    <div class="btn-row">
+                        <button id="save-profile-btn" class="btn btn-primary" type="submit">Se connecter</button>
+                        <button id="cancel-edit-btn" class="btn btn-secondary hidden" type="button" onclick="closeProfileEditor()">Annuler</button>
+                    </div>
+                    <div class="helper" id="welcome-helper">Si le compte n'existe pas encore, il sera cree automatiquement dans ce navigateur.</div>
+                </form>
+            </div>
+            <div class="welcome-side">
+                <div class="profiles-card">
+                    <div id="profiles-head" class="profiles-head">
+                        <div>
+                            <div class="section-kicker">Profils</div>
+                            <h3>Enfants enregistres dans ce navigateur</h3>
+                            <p>Changez de profil en un clic, creez un nouvel enfant, ou supprimez une fiche qui n'est plus utile.</p>
+                        </div>
+                        <div id="active-chip" class="active-chip">
+                            <strong id="profile-panel-active-name">Aucun profil actif</strong>
+                            <span id="profile-panel-active-meta">Connectez-vous pour lancer le chat, l'analyse et les statistiques.</span>
+                        </div>
+                    </div>
+                    <div id="profiles-hidden-note" class="profiles-hidden-note"></div>
+                    <div id="profiles-empty" class="profiles-empty">Aucun profil enregistre pour le moment. Creez votre premier profil avec le formulaire a gauche.</div>
+                    <div id="profiles-list" class="profiles-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-screen" class="screen app-screen">
+        <div class="header">
+            <div class="header-left">
+                <span class="icon">👶</span>
+                <div>
+                    <h1>BabyBot</h1>
+                    <small>Assistant Parental Intelligent</small>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="active-child">
+                    <strong id="active-child-name">Aucun profil</strong>
+                    <small id="active-child-meta">Selectionnez un enfant pour continuer.</small>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab(event, 'chat')">💬 Chat</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'analyze')">🎤 Analyse</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'stats')">📊 Stats</button>
+                    <button class="tab-btn" onclick="openProfileManager()">👶 Profils</button>
+                    <button class="logout-btn" onclick="logout()">Deconnecter</button>
+                </div>
+            </div>
+        </div>
+        <div id="tab-chat" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="messages" id="messages"></div>
+            <div class="quick-questions" id="quick-questions">
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Pourquoi mon bebe pleure-t-il ?</button>
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Conseils pour le sommeil</button>
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Quand diversifier l'alimentation ?</button>
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Mon bebe a des coliques</button>
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Quand consulter en urgence ?</button>
+                <button class="quick-btn" onclick="askQuick(this.textContent)">Etapes du developpement moteur</button>
+            </div>
+            <div class="input-bar">
+                <input type="text" id="user-input" placeholder="Posez votre question sur votre bebe..." onkeydown="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" id="send-btn">Envoyer</button>
+            </div>
+        </div>
+
+        <div id="tab-analyze" class="analyze-panel" style="display:none;">
+            <div class="analyze-card">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                    <span style="font-size:24px;">🎤</span>
+                    <span style="font-weight:700; font-size:16px;">Analyse des Pleurs</span>
+                </div>
+                <div class="analyze-actions">
+                    <button class="analyze-btn" id="record-btn" onclick="toggleRecording()">Enregistrer 3s au micro</button>
+                    <button class="analyze-btn" id="upload-btn" onclick="document.getElementById('audio-file').click()">Choisir un fichier audio</button>
+                </div>
+                <input id="audio-file" type="file" accept="audio/*" onchange="uploadSelectedFile(event)" style="display:none;">
+                <div class="analyze-status" id="analyze-status">Le navigateur peut enregistrer un WAV puis l'envoyer a l'API.</div>
+                <div class="result-card" id="result-card">
+                    <div class="result-header">
+                        <span class="result-icon" id="result-icon"></span>
+                        <div>
+                            <div class="result-type" id="result-type"></div>
+                            <div class="result-conf" id="result-conf"></div>
+                        </div>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                    <p class="result-advice" id="result-advice"></p>
+                </div>
+            </div>
+            <div class="analyze-card">
+                <h3 style="font-size:15px; margin-bottom:12px;">Comment ca marche ?</h3>
+                <div class="steps-list">
+                    <div class="step-item"><div class="step-num" style="background:rgba(16,185,129,0.13); color:var(--green);">1</div><div><div class="step-title">Capture audio</div><div class="step-desc">Le micro du navigateur enregistre 3 secondes.</div></div></div>
+                    <div class="step-item"><div class="step-num" style="background:rgba(59,130,246,0.13); color:var(--blue);">2</div><div><div class="step-title">Conversion WAV</div><div class="step-desc">Le son est converti en WAV 16-bit cote client.</div></div></div>
+                    <div class="step-item"><div class="step-num" style="background:rgba(239,68,68,0.13); color:var(--red);">3</div><div><div class="step-title">Analyse serveur</div><div class="step-desc">L'API demo produit une prediction deterministe.</div></div></div>
+                    <div class="step-item"><div class="step-num" style="background:rgba(245,158,11,0.13); color:var(--yellow);">4</div><div><div class="step-title">Conseil</div><div class="step-desc">Un conseil adapte est renvoye par BabyBot.</div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-stats" class="stats-panel" style="display:none;">
+            <h2 style="font-size:20px; margin-bottom:20px;">Statistiques de Feedback</h2>
+            <div class="stats-grid">
+                <div class="stat-card" style="border-top:3px solid var(--blue);"><div class="stat-icon">📋</div><div class="stat-value" style="color:var(--blue);" id="stat-total">0</div><div class="stat-label">Total</div></div>
+                <div class="stat-card" style="border-top:3px solid var(--green);"><div class="stat-icon">👍</div><div class="stat-value" style="color:var(--green);" id="stat-pos">0</div><div class="stat-label">Positifs</div></div>
+                <div class="stat-card" style="border-top:3px solid var(--red);"><div class="stat-icon">👎</div><div class="stat-value" style="color:var(--red);" id="stat-neg">0</div><div class="stat-label">Negatifs</div></div>
+            </div>
+            <div class="pipeline-card">
+                <h3 style="color:var(--orange); font-size:15px;">Pipeline Finetuning</h3>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="pipeline-bar" style="flex:1;"><div class="pipeline-fill" id="pipeline-fill" style="width:0%"></div></div>
+                    <span style="color:var(--gray); font-size:12px;" id="pipeline-count">0/100</span>
+                </div>
+                <p style="color:var(--gray-dark); font-size:12px; margin-top:8px;" id="pipeline-msg">100 feedbacks restants avant le prochain finetuning.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script>
+        let messageCount = 0;
+        let stats = { positive: 0, negative: 0, total: 0 };
+        let currentMessages = [];
+        const API = window.location.origin;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordStopTimer = null;
+        const STORAGE_KEY = 'babybot-child-profiles';
+        const LAST_PROFILE_KEY = 'babybot-active-child-id';
+        const PROFILE_STATE_KEY = 'babybot-profile-state';
+        let profiles = loadProfiles();
+        let profileStates = loadProfileStates();
+        let activeProfileId = localStorage.getItem(LAST_PROFILE_KEY) || null;
+        let welcomeMode = currentProfile() ? 'manage' : 'login';
+        let isEditingProfile = false;
+
+        function loadProfiles() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+            catch (err) { return []; }
+        }
+
+        function saveProfiles() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+        }
+
+        function loadProfileStates() {
+            try { return JSON.parse(localStorage.getItem(PROFILE_STATE_KEY) || '{}'); }
+            catch (err) { return {}; }
+        }
+
+        function saveProfileStates() {
+            localStorage.setItem(PROFILE_STATE_KEY, JSON.stringify(profileStates));
+        }
+
+        function defaultProfileState() {
+            return {
+                stats: { positive: 0, negative: 0, total: 0 },
+                messages: []
+            };
+        }
+
+        function ensureProfileState(profileId) {
+            if (!profileId) return defaultProfileState();
+            if (!profileStates[profileId]) profileStates[profileId] = defaultProfileState();
+            return profileStates[profileId];
+        }
+
+        function syncActiveProfileState() {
+            if (!activeProfileId) return;
+            profileStates[activeProfileId] = {
+                stats: { ...stats },
+                messages: currentMessages.map((message) => ({ ...message }))
+            };
+            saveProfileStates();
+        }
+
+        function slugify(value) {
+            return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+
+        function currentProfile() {
+            return profiles.find((profile) => profile.id === activeProfileId) || null;
+        }
+
+        function profileAge(profile) {
+            return `${profile.ageValue} ${profile.ageUnit}`;
+        }
+
+        function currentParentId() {
+            const profile = currentProfile();
+            return profile ? profile.id : 'web-user';
+        }
+
+        function profileContext() {
+            const profile = currentProfile();
+            return profile ? `${profile.firstName} ${profile.lastName}, ${profileAge(profile)}` : 'votre enfant';
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatProfileName(profile) {
+            return `${profile.firstName} ${profile.lastName}`.trim();
+        }
+
+        function profileInitials(profile) {
+            return `${(profile.firstName || '').charAt(0)}${(profile.lastName || '').charAt(0)}`.trim().toUpperCase() || '?';
+        }
+
+        function resetProfileForm() {
+            document.getElementById('profile-form').reset();
+            document.getElementById('age-unit').value = 'mois';
+            document.getElementById('save-profile-btn').textContent = welcomeMode === 'manage' ? 'Enregistrer' : 'Se connecter';
+        }
+
+        function closeProfileEditor() {
+            isEditingProfile = false;
+            resetProfileForm();
+            updateWelcomeState();
+        }
+
+        function updateWelcomeState() {
+            const profile = currentProfile();
+            const isManaging = welcomeMode === 'manage' && !!profile;
+            const welcomeCard = document.querySelector('.welcome-card');
+            const hiddenNote = document.getElementById('profiles-hidden-note');
+            const profilesHead = document.getElementById('profiles-head');
+            const activeChip = document.getElementById('active-chip');
+            const profileForm = document.getElementById('profile-form');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const shouldShowEditor = !isManaging || isEditingProfile;
+            welcomeCard.classList.toggle('login-mode', !isManaging);
+            document.getElementById('welcome-title').textContent = isManaging ? 'Gerer les profils' : 'Connexion enfant';
+            document.getElementById('welcome-subtitle').textContent = isManaging
+                ? 'Consultez et gerez uniquement le profil actuellement connecte.'
+                : 'Entrez juste les informations de l enfant pour continuer.';
+            document.getElementById('welcome-privacy').textContent = isManaging
+                ? 'Le profil actif reste connecte tant que vous ne cliquez pas sur Deconnecter.'
+                : 'Les autres comptes ne sont pas affiches. Entrez vos informations pour ouvrir uniquement votre compte.';
+            document.getElementById('welcome-helper').textContent = isManaging
+                ? 'Pour ouvrir un autre enfant, deconnectez-vous puis reconnectez-vous avec ses informations.'
+                : 'Si le compte n existe pas encore, il sera cree automatiquement dans ce navigateur.';
+            document.getElementById('return-to-app-btn').style.display = isManaging ? 'inline-flex' : 'none';
+            document.getElementById('save-profile-btn').textContent = isManaging ? 'Enregistrer' : 'Se connecter';
+            profileForm.classList.toggle('hidden', !shouldShowEditor);
+            cancelEditBtn.classList.toggle('hidden', !isManaging || !isEditingProfile);
+
+            document.getElementById('profile-panel-active-name').textContent = profile ? formatProfileName(profile) : 'Aucun profil actif';
+            document.getElementById('profile-panel-active-meta').textContent = profile
+                ? `Profil actif - ${profileAge(profile)}`
+                : 'Connectez-vous pour lancer le chat, l analyse et les statistiques.';
+            profilesHead.style.display = isManaging ? 'flex' : 'none';
+            activeChip.style.display = isManaging ? 'block' : 'none';
+            hiddenNote.style.display = isManaging ? 'none' : 'block';
+            hiddenNote.textContent = isManaging
+                ? ''
+                : '';
+        }
+
+        function renderProfilesList() {
+            const list = document.getElementById('profiles-list');
+            const empty = document.getElementById('profiles-empty');
+            const activeProfile = currentProfile();
+            const isManaging = welcomeMode === 'manage' && !!activeProfile;
+
+            if (!isManaging) {
+                list.innerHTML = '';
+                list.style.display = 'none';
+                empty.style.display = 'none';
+                return;
+            }
+
+            list.style.display = 'grid';
+
+            if (!activeProfile) {
+                list.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.innerHTML = `
+                <div class="profile-item active-profile">
+                    <div class="profile-avatar">${escapeHtml(profileInitials(activeProfile))}</div>
+                    <div class="profile-info">
+                        <div class="profile-name">${escapeHtml(formatProfileName(activeProfile))}</div>
+                        <div class="profile-meta">${escapeHtml(profileAge(activeProfile))}</div>
+                        <div class="profile-badge">Profil actif</div>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="profile-btn primary" type="button" onclick="returnToApp()">Ouvrir</button>
+                        <button class="profile-btn" type="button" onclick="fillProfileForm('${activeProfile.id}')">Modifier le formulaire</button>
+                        <button class="profile-btn danger" type="button" onclick="deleteProfile('${activeProfile.id}')">Supprimer</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fillProfileForm(profileId) {
+            const profile = profiles.find((item) => item.id === profileId);
+            if (!profile) return;
+            isEditingProfile = true;
+            document.getElementById('first-name').value = profile.firstName;
+            document.getElementById('last-name').value = profile.lastName;
+            document.getElementById('age-value').value = profile.ageValue;
+            document.getElementById('age-unit').value = profile.ageUnit;
+            document.getElementById('save-profile-btn').textContent = welcomeMode === 'manage' ? 'Enregistrer' : 'Se connecter';
+            updateWelcomeState();
+            document.getElementById('first-name').focus();
+            showToast('Le formulaire a ete pre-rempli.');
+        }
+
+        function feedbackMarkup(messageId, feedback) {
+            if (!messageId) return '';
+            return `<div class="feedback-btns">
+                <button class="feedback-btn ${feedback === 'up' ? 'active-up' : ''}" onclick="sendFeedback('${messageId}', true, this)">&#128077;</button>
+                <button class="feedback-btn ${feedback === 'down' ? 'active-down' : ''}" onclick="sendFeedback('${messageId}', false, this)">&#128078;</button>
+            </div>`;
+        }
+
+        function renderSingleMessage(message) {
+            const container = document.getElementById('messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${message.role}`;
+            const rendered = String(message.content || '')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+
+            let html = '';
+            if (message.role === 'assistant') html += '<div class="msg-label"><span>&#128118;</span><span>BabyBot</span></div>';
+            html += `<div class="msg-bubble">${rendered}</div>`;
+            html += feedbackMarkup(message.id, message.feedback);
+            msgDiv.innerHTML = html;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderConversation() {
+            const container = document.getElementById('messages');
+            container.innerHTML = '';
+            currentMessages.forEach((message) => renderSingleMessage(message));
+            messageCount = currentMessages.filter((message) => message.role === 'user').length;
+            document.getElementById('quick-questions').style.display = messageCount > 1 ? 'none' : 'flex';
+        }
+
+        function loadActiveProfileState() {
+            if (!activeProfileId) {
+                currentMessages = [];
+                stats = { positive: 0, negative: 0, total: 0 };
+                renderConversation();
+                updateStats();
+                return;
+            }
+
+            const state = ensureProfileState(activeProfileId);
+            stats = { ...defaultProfileState().stats, ...(state.stats || {}) };
+            currentMessages = Array.isArray(state.messages) ? state.messages.map((message) => ({ ...message })) : [];
+            renderConversation();
+            updateStats();
+
+            if (!currentMessages.length) addWelcomeMessage();
+        }
+
+        function selectProfile(profileId) {
+            activeProfileId = profileId;
+            localStorage.setItem(LAST_PROFILE_KEY, profileId);
+            updateActiveChild();
+            renderProfilesList();
+            updateWelcomeState();
+            showAppScreen();
+            loadActiveProfileState();
+        }
+
+        function updateActiveChild() {
+            const profile = currentProfile();
+            document.getElementById('active-child-name').textContent = profile ? `${profile.firstName} ${profile.lastName}` : 'Aucun profil';
+            document.getElementById('active-child-meta').textContent = profile ? `Profil actif - ${profileAge(profile)}` : 'Selectionnez un enfant pour continuer.';
+        }
+
+        function showWelcomeScreen(mode = 'login') {
+            welcomeMode = mode;
+            isEditingProfile = false;
+            document.getElementById('welcome-screen').classList.add('active');
+            document.getElementById('app-screen').classList.remove('active');
+            renderProfilesList();
+            updateWelcomeState();
+        }
+
+        function showAppScreen() {
+            document.getElementById('welcome-screen').classList.remove('active');
+            document.getElementById('app-screen').classList.add('active');
+        }
+
+        function openProfileManager() {
+            showWelcomeScreen(currentProfile() ? 'manage' : 'login');
+        }
+
+        function returnToApp() {
+            if (!currentProfile()) {
+                showToast('Aucun profil actif a rouvrir.');
+                return;
+            }
+            showAppScreen();
+        }
+
+        function deleteProfile(profileId) {
+            const profile = profiles.find((item) => item.id === profileId);
+            if (!profile) return;
+            if (!window.confirm(`Supprimer le profil ${formatProfileName(profile)} ?`)) return;
+
+            profiles = profiles.filter((item) => item.id !== profileId);
+            saveProfiles();
+            delete profileStates[profileId];
+            saveProfileStates();
+
+            if (activeProfileId === profileId) {
+                activeProfileId = null;
+                localStorage.removeItem(LAST_PROFILE_KEY);
+                updateActiveChild();
+                resetConversation();
+            }
+
+            renderProfilesList();
+            updateWelcomeState();
+            resetProfileForm();
+            showToast('Profil supprime.');
+        }
+
+        function logout() {
+            activeProfileId = null;
+            localStorage.removeItem(LAST_PROFILE_KEY);
+            currentMessages = [];
+            stats = { positive: 0, negative: 0, total: 0 };
+            updateActiveChild();
+            resetConversation();
+            updateStats();
+            resetProfileForm();
+            showWelcomeScreen('login');
+            showToast('Deconnexion reussie.');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(showToast._timer);
+            showToast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
+        }
+
+        function switchTab(event, tab) {
+            document.querySelectorAll('.tab-btn').forEach((button) => button.classList.remove('active'));
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
+            ['chat', 'analyze', 'stats'].forEach((name) => {
+                document.getElementById(`tab-${name}`).style.display = name === tab ? (name === 'chat' ? 'flex' : 'block') : 'none';
+            });
+        }
+
+        function resetConversation() {
+            messageCount = 0;
+            currentMessages = [];
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('quick-questions').style.display = 'flex';
+        }
+
+        function addMessage(role, content, id, options = {}) {
+            const message = {
+                role,
+                content,
+                id: id || null,
+                feedback: options.feedback || null
+            };
+            currentMessages.push(message);
+            renderSingleMessage(message);
+            syncActiveProfileState();
+        }
+
+        function addWelcomeMessage() {
+            const profile = currentProfile();
+            const childLabel = profile ? `${profile.firstName}, ${profileAge(profile)}` : 'votre enfant';
+            addMessage('assistant',
+                'Bonjour ! Je suis **BabyBot**.\n\n' +
+                `Le profil actif est **${childLabel}**.\n` +
+                'Je peux vous aider avec :\n- L\'analyse des pleurs de votre bebe\n' +
+                '- Des conseils sur la sante et le sommeil\n' +
+                '- L\'alimentation et la diversification\n' +
+                '- Le developpement de votre enfant\n\n' +
+                'Que souhaitez-vous savoir ?'
+            );
+        }
+
+        function showTyping() {
+            const container = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.id = 'typing';
+            div.className = 'typing';
+            div.innerHTML = '<span>👶</span><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideTyping() {
+            document.getElementById('typing')?.remove();
+        }
+
+        async function sendMessage() {
+            const profile = currentProfile();
+            if (!profile) {
+                showToast('Choisissez un profil enfant d\'abord.');
+                openProfileManager();
+                return;
+            }
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            addMessage('user', text);
+            messageCount += 1;
+            if (messageCount > 1) document.getElementById('quick-questions').style.display = 'none';
+
+            showTyping();
+            try {
+                const res = await fetch(`${API}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: `${text}\n\nContexte enfant: ${profileContext()}`, parent_id: currentParentId() })
+                });
+                const data = await res.json();
+                hideTyping();
+                addMessage('assistant', data.response, data.message_id);
+            } catch (err) {
+                hideTyping();
+                addMessage('assistant', "Erreur de connexion au serveur. Verifiez que l'API est lancee.");
+            }
+        }
+
+        function askQuick(text) {
+            document.getElementById('user-input').value = text;
+            sendMessage();
+        }
+
+        async function sendFeedback(messageId, isPositive, btn) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.feedback-btn').forEach((item) => item.classList.remove('active-up', 'active-down'));
+            btn.classList.add(isPositive ? 'active-up' : 'active-down');
+            stats.total += 1;
+            if (isPositive) stats.positive += 1; else stats.negative += 1;
+            const message = currentMessages.find((item) => item.id === messageId);
+            if (message) message.feedback = isPositive ? 'up' : 'down';
+            updateStats();
+            syncActiveProfileState();
+
+            const msg = document.createElement('span');
+            msg.className = 'feedback-msg';
+            msg.textContent = 'Merci pour votre retour !';
+            if (!parent.querySelector('.feedback-msg')) parent.appendChild(msg);
+
+            try {
+                await fetch(`${API}/api/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message_id: messageId, parent_id: currentParentId(), is_positive: isPositive })
+                });
+            } catch (err) {
+                console.error('Feedback error:', err);
+            }
+        }
+
+        function setAnalyzeBusy(isBusy, status) {
+            document.getElementById('record-btn').disabled = isBusy;
+            document.getElementById('upload-btn').disabled = isBusy;
+            document.getElementById('analyze-status').textContent = status || '';
+        }
+
+        async function toggleRecording() {
+            if (!currentProfile()) {
+                showToast('Selectionnez un profil enfant avant l\'analyse.');
+                openProfileManager();
+                return;
+            }
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                stopRecording();
+                return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                setAnalyzeBusy(false, "Le micro n'est pas disponible dans ce navigateur.");
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunks.push(event.data); };
+                mediaRecorder.onstop = async () => {
+                    clearTimeout(recordStopTimer);
+                    const webmBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    stream.getTracks().forEach((track) => track.stop());
+                    document.getElementById('record-btn').textContent = 'Enregistrer 3s au micro';
+                    setAnalyzeBusy(true, 'Conversion en WAV et analyse en cours...');
+                    try {
+                        const wavBlob = await convertBlobToWav(webmBlob);
+                        await analyzeAudioBlob(wavBlob, 'micro.wav');
+                    } catch (err) {
+                        setAnalyzeBusy(false, `Analyse impossible: ${err.message}`);
+                    }
+                };
+                mediaRecorder.start();
+                document.getElementById('record-btn').textContent = 'Arreter';
+                setAnalyzeBusy(false, 'Enregistrement en cours pendant 3 secondes...');
+                recordStopTimer = setTimeout(() => stopRecording(), 3000);
+            } catch (err) {
+                setAnalyzeBusy(false, `Acces micro refuse: ${err.message}`);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+        }
+
+        async function uploadSelectedFile(event) {
+            if (!currentProfile()) {
+                showToast('Selectionnez un profil enfant avant l\'analyse.');
+                openProfileManager();
+                return;
+            }
+            const file = event.target.files[0];
+            if (!file) return;
+            setAnalyzeBusy(true, 'Preparation du fichier audio...');
+            try {
+                const fileName = file.name || 'audio.wav';
+                const isWav = (file.type || '').includes('wav') || fileName.toLowerCase().endsWith('.wav');
+
+                if (isWav) {
+                    await analyzeAudioBlob(file, fileName);
+                } else {
+                    setAnalyzeBusy(true, 'Conversion en WAV et analyse en cours...');
+                    const wavBlob = await convertBlobToWav(file);
+                    await analyzeAudioBlob(wavBlob, fileName.replace(/\.[^.]+$/, '') + '.wav');
+                }
+            } catch (err) {
+                setAnalyzeBusy(
+                    false,
+                    `Analyse impossible: ${err.message}. Utilisez de preference un fichier WAV, MP3, OGG ou WebM lisible par le navigateur.`
+                );
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        async function analyzeAudioBlob(blob, filename) {
+            document.getElementById('result-card').classList.remove('show');
+            setAnalyzeBusy(true, 'Analyse en cours...');
+            const formData = new FormData();
+            formData.append('audio', blob, filename);
+            formData.append('parent_id', currentParentId());
+            const response = await fetch(`${API}/api/analyze`, { method: 'POST', body: formData });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'reponse serveur invalide');
+            renderAnalysisResult(data);
+            setAnalyzeBusy(false, 'Analyse terminee.');
+        }
+
+        function renderAnalysisResult(data) {
+            const cryType = (data.cry_type || '').toLowerCase();
+            const palette = {
+                faim: { color: '#f59e0b', icon: '🍼', label: 'Faim' },
+                fatigue: { color: '#8b5cf6', icon: '😴', label: 'Fatigue' },
+                douleur: { color: '#ef4444', icon: '😢', label: 'Douleur' },
+                peur: { color: '#3b82f6', icon: '😨', label: 'Peur' },
+                inconfort: { color: '#06b6d4', icon: '😣', label: 'Inconfort' }
+            };
+            const style = palette[cryType] || { color: '#94a3b8', icon: '🎧', label: data.cry_type || 'Inconnu' };
+            const confidence = Math.round((data.confidence || 0) * 100);
+            document.getElementById('result-icon').textContent = style.icon;
+            document.getElementById('result-type').textContent = style.label;
+            document.getElementById('result-type').style.color = style.color;
+            document.getElementById('result-conf').textContent = `Confiance : ${confidence}%`;
+            document.getElementById('progress-fill').style.width = `${confidence}%`;
+            document.getElementById('progress-fill').style.background = style.color;
+            document.getElementById('result-card').style.borderLeft = `4px solid ${style.color}`;
+            document.getElementById('result-advice').textContent = data.advice || 'Aucun conseil disponible.';
+            document.getElementById('result-card').classList.add('show');
+        }
+
+        async function convertBlobToWav(blob) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                const arrayBuffer = await blob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+                return audioBufferToWav(audioBuffer);
+            } finally {
+                await audioContext.close();
+            }
+        }
+
+        function audioBufferToWav(audioBuffer) {
+            const sampleRate = audioBuffer.sampleRate;
+            const samples = audioBuffer.getChannelData(0);
+            const wavBuffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(wavBuffer);
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+            let offset = 44;
+            for (let i = 0; i < samples.length; i += 1, offset += 2) {
+                const sample = Math.max(-1, Math.min(1, samples[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+            }
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, value) {
+            for (let i = 0; i < value.length; i += 1) view.setUint8(offset + i, value.charCodeAt(i));
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total').textContent = stats.total;
+            document.getElementById('stat-pos').textContent = stats.positive;
+            document.getElementById('stat-neg').textContent = stats.negative;
+            document.getElementById('pipeline-fill').style.width = `${Math.min(stats.total, 100)}%`;
+            document.getElementById('pipeline-count').textContent = `${stats.total}/100`;
+            document.getElementById('pipeline-msg').textContent = stats.total >= 100 ? 'Seuil atteint. Finetuning LoRA declenche automatiquement.' : `${100 - stats.total} feedbacks restants avant le prochain finetuning.`;
+            syncActiveProfileState();
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            const firstName = String(form.get('firstName') || '').trim();
+            const lastName = String(form.get('lastName') || '').trim();
+            const ageValue = String(form.get('ageValue') || '').trim();
+            const ageUnit = String(form.get('ageUnit') || 'mois');
+            const activeProfile = currentProfile();
+            const isManaging = welcomeMode === 'manage' && !!activeProfile;
+            if (!firstName || !lastName || !ageValue) {
+                showToast('Veuillez remplir prenom, nom et age.');
+                return;
+            }
+
+            if (isManaging) {
+                const duplicateProfile = profiles.find((profile) =>
+                    profile.id !== activeProfile.id &&
+                    profile.firstName.toLowerCase() === firstName.toLowerCase() &&
+                    profile.lastName.toLowerCase() === lastName.toLowerCase() &&
+                    String(profile.ageValue) === ageValue &&
+                    profile.ageUnit === ageUnit
+                );
+
+                if (duplicateProfile) {
+                    showToast('Un espace existe deja pour cet enfant.');
+                    return;
+                }
+
+                profiles = profiles.map((profile) => profile.id === activeProfile.id
+                    ? { ...profile, firstName, lastName, ageValue, ageUnit }
+                    : profile
+                );
+                saveProfiles();
+                isEditingProfile = false;
+                updateActiveChild();
+                renderProfilesList();
+                updateWelcomeState();
+                resetProfileForm();
+                showToast('Profil mis a jour.');
+                return;
+            }
+
+            const existingProfile = profiles.find((profile) =>
+                profile.firstName.toLowerCase() === firstName.toLowerCase() &&
+                profile.lastName.toLowerCase() === lastName.toLowerCase() &&
+                String(profile.ageValue) === ageValue &&
+                profile.ageUnit === ageUnit
+            );
+
+            if (existingProfile) {
+                resetProfileForm();
+                selectProfile(existingProfile.id);
+                showToast('Connexion reussie.');
+                return;
+            }
+
+            const newProfile = {
+                id: `${slugify(firstName)}-${slugify(lastName)}-${ageValue}-${ageUnit}-${Date.now()}`,
+                firstName,
+                lastName,
+                ageValue,
+                ageUnit
+            };
+            profiles.unshift(newProfile);
+            saveProfiles();
+            resetProfileForm();
+            renderProfilesList();
+            updateWelcomeState();
+            selectProfile(newProfile.id);
+            showToast('Compte cree et connecte.');
+        });
+
+        resetProfileForm();
+        updateStats();
+        updateActiveChild();
+        renderProfilesList();
+        updateWelcomeState();
+        if (currentProfile()) {
+            showAppScreen();
+            loadActiveProfileState();
+        } else {
+            showWelcomeScreen('login');
+        }
+    </script>
+</body>
+</html>
